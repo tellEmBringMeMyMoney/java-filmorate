@@ -34,7 +34,7 @@ public class UserService {
         if (user.getId() == null) {
             throw new ValidationException("ID пользователя не может быть пустой");
         }
-        findById(user.getId());
+        getUserOrThrow(user.getId());
 
         normalizeName(user);
         userStorage.update(user);
@@ -47,14 +47,13 @@ public class UserService {
     }
 
     public User findById(Integer id) {
-        return userStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
+        return getUserOrThrow(id);
     }
 
     public void addFriend(Integer userId, Integer friendId) {
         ensureDifferentUsers(userId, friendId);
-        findById(userId);
-        findById(friendId);
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
 
         userStorage.addFriend(userId, friendId);
         log.info("Пользователь id={} добавил в друзья id={}", userId, friendId);
@@ -62,26 +61,26 @@ public class UserService {
 
     public void removeFriend(Integer userId, Integer friendId) {
         ensureDifferentUsers(userId, friendId);
-        findById(userId);
-        findById(friendId);
+        getUserOrThrow(userId);
+        getUserOrThrow(friendId);
 
         userStorage.removeFriend(userId, friendId);
         log.info("Пользователь id={} удалил из друзей id={}", userId, friendId);
     }
 
     public List<User> getFriends(Integer userId) {
-        findById(userId);
+        getUserOrThrow(userId);
 
         return userStorage.getFriendIds(userId).stream()
                 .sorted()
-                .map(this::findById)
+                .map(this::getUserOrThrow)
                 .toList();
     }
 
     public List<User> getCommonFriends(Integer userId, Integer otherId) {
         ensureDifferentUsers(userId, otherId);
-        findById(userId);
-        findById(otherId);
+        getUserOrThrow(userId);
+        getUserOrThrow(otherId);
 
         Set<Integer> a = userStorage.getFriendIds(userId);
         Set<Integer> b = userStorage.getFriendIds(otherId);
@@ -89,7 +88,7 @@ public class UserService {
         return a.stream()
                 .filter(b::contains)
                 .sorted()
-                .map(this::findById)
+                .map(this::getUserOrThrow)
                 .toList();
     }
 
@@ -103,5 +102,10 @@ public class UserService {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
+    }
+
+    private User getUserOrThrow (Integer userId) {
+        return userStorage.getById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 }

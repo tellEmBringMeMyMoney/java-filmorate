@@ -49,16 +49,16 @@ public class FilmService {
     }
 
     public void addLike(Integer filmId, Integer userId) {
-        filmStorage.getById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
-        userStorage.getById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+        checkFilmOrThrow(filmId);
+        checkUserOrThrow(userId);
 
         filmStorage.addLike(filmId, userId);
         log.info("Пользователь id={} поставил лайк фильму id={}", userId, filmId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
-        filmStorage.getById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
-        userStorage.getById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+        checkFilmOrThrow(filmId);
+        checkUserOrThrow(userId);
 
         filmStorage.removeLike(filmId, userId);
         log.info("Пользователь id={} убрал лайк с фильма id={}", userId, filmId);
@@ -72,6 +72,14 @@ public class FilmService {
             return List.of();
         }
         return filmStorage.getPopular(count);
+    }
+
+    private void checkUserOrThrow (Integer userId){
+        userStorage.getById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+    }
+
+    private void checkFilmOrThrow (Integer filmId){
+        filmStorage.getById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
     }
 
 }
