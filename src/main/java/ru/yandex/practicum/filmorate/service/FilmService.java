@@ -74,11 +74,11 @@ public class FilmService {
         return filmStorage.getPopular(count);
     }
 
-    private void checkUserOrThrow (Integer userId){
+    private void checkUserOrThrow(Integer userId) {
         userStorage.getById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 
-    private void checkFilmOrThrow (Integer filmId){
+    private void checkFilmOrThrow(Integer filmId) {
         filmStorage.getById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
     }
 
