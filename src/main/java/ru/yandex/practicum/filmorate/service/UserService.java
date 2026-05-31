@@ -104,7 +104,7 @@ public class UserService {
         }
     }
 
-    private User getUserOrThrow (Integer userId) {
+    private User getUserOrThrow(Integer userId) {
         return userStorage.getById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
