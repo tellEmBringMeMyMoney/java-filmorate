@@ -7,10 +7,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
@@ -68,5 +70,14 @@ public class AppExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of("Internal Server Error", "Произошла непредвиденная ошибка"));
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND) // Задает HTTP-статус 404
+    public Map<String, String> handleDataIntegrityViolation(final org.springframework.dao.DataIntegrityViolationException e) {
+        return Map.of(
+                "error", "Объект не найден",
+                "message", "Указан несуществующий ID рейтинга MPA или жанра"
+        );
     }
 }

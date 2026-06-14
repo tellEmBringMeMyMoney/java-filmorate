@@ -1,14 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -37,6 +39,10 @@ public class Film {
     @Positive(message = "Продолжительность должна быть положительным числом")
     private Integer duration;
 
+    @Valid // Заставляет Spring валидировать внутренние поля MpaRating
+    @NotNull(message = "Рейтинг MPA обязателен")
+    private MpaRating mpa;
+
     @AssertTrue(message = "Дата релиза не может быть раньше 28 декабря 1895 года")
     @JsonIgnore
     public boolean isReleaseDateValid() {
@@ -46,6 +52,10 @@ public class Film {
         return !releaseDate.isBefore(FIRST_FILM_DATE);
     }
 
-    private final Set<Long> likes = new HashSet<>();
+    private Set<Integer> likes = new HashSet<>();
+
+    @Valid
+    private Set<Genre> genres = new LinkedHashSet<>();
+
 
 }

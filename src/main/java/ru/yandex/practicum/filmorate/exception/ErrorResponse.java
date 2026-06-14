@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.exception;
 import lombok.Builder;
 import lombok.Value;
 
-
 import java.util.List;
 
 @Value
