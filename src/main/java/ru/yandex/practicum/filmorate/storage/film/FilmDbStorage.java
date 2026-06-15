@@ -80,8 +80,11 @@ public class FilmDbStorage implements FilmStorage {
         if (films.isEmpty()) {
             return Optional.empty();
         }
-        loadGenresForFilms(films);
-        loadLikesForFilms(films);
+
+        Film film = films.getFirst();
+
+        loadGenres(film);
+        loadLikes(film);
         return Optional.of(films.getFirst());
     }
 
@@ -189,5 +192,32 @@ public class FilmDbStorage implements FilmStorage {
         film.setMpa(mpa);
         return film;
     }
+
+    private void loadGenres(Film film) {
+        String sql = "SELECT g.genre_id, g.name FROM film_genres fg " +
+                "JOIN genres g ON fg.genre_id = g.genre_id " +
+                "WHERE fg.film_id = ? " +
+                "ORDER BY g.genre_id";
+
+        List<Genre> genresList = jdbc.query(sql, (rs, rowNum) -> {
+            Genre genre = new Genre();
+            genre.setId(rs.getInt("genre_id"));
+            genre.setName(rs.getString("name"));
+            return genre;
+        }, film.getId());
+
+        // Преобразуем List в LinkedHashSet для сохранения порядка и уникальности
+        film.setGenres(new java.util.LinkedHashSet<>(genresList));
+    }
+
+    private void loadLikes(Film film) {
+        String sql = "SELECT user_id FROM film_likes WHERE film_id = ?";
+
+        List<Integer> userIds = jdbc.query(sql, (rs, rowNum) -> rs.getInt("user_id"), film.getId());
+
+        film.getLikes().clear();
+        film.getLikes().addAll(userIds);
+    }
+
 
 }

@@ -6,10 +6,13 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -17,14 +20,27 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage, MpaService mpaService, GenreService genreService) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.mpaService = mpaService;
+        this.genreService = genreService;
     }
 
     public Film create(Film film) {
+        if (film.getMpa() != null) {
+            mpaService.getMpaRatingById(film.getMpa().getId());
+        }
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            Set<Genre> genreSet = new HashSet<>(film.getGenres());
+            genreService.validateGenreIds(genreSet);
+        }
+
         Film created = filmStorage.create(film);
         log.info("Добавлен фильм: id={}, name={}", created.getId(), created.getName());
         return created;
@@ -33,6 +49,15 @@ public class FilmService {
     public Film update(Film film) {
         if (film.getId() == null || filmStorage.getById(film.getId()).isEmpty()) {
             throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
+        }
+
+        if (film.getMpa() != null) {
+            mpaService.getMpaRatingById(film.getMpa().getId());
+        }
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            Set<Genre> genreSet = new HashSet<>(film.getGenres());
+            genreService.validateGenreIds(genreSet);
         }
         filmStorage.update(film);
         log.info("Обновлён фильм: id={}, name={}", film.getId(), film.getName());

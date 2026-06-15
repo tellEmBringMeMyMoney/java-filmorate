@@ -51,10 +51,7 @@ public class UserService {
     }
 
     public void addFriend(Integer userId, Integer friendId) {
-        if (userId.equals(friendId)) {
-            log.warn("Валидация не пройдена: пользователь id={} пытается добавить себя в друзья", userId);
-            throw new ValidationException("Пользователь не может добавить самого себя в друзья");
-        }
+        ensureDifferentUsers(userId, friendId);
         getUserOrThrow(userId);
         getUserOrThrow(friendId);
         if (userStorage.friendshipExists(friendId, userId)) {
