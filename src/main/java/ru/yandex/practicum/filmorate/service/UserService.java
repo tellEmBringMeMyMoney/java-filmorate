@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -54,9 +54,14 @@ public class UserService {
         ensureDifferentUsers(userId, friendId);
         getUserOrThrow(userId);
         getUserOrThrow(friendId);
-
-        userStorage.addFriend(userId, friendId);
-        log.info("Пользователь id={} добавил в друзья id={}", userId, friendId);
+        if (userStorage.friendshipExists(friendId, userId)) {
+            userStorage.addFriend(userId, friendId, FriendshipStatus.CONFIRMED);
+            userStorage.updateFriendshipStatus(friendId, userId, FriendshipStatus.CONFIRMED);
+            log.info("Встречная заявка: дружба id={} и id={} подтверждена", userId, friendId);
+        } else {
+            userStorage.addFriend(userId, friendId, FriendshipStatus.UNCONFIRMED);
+            log.info("Пользователь id={} отправил заявку в друзья пользователю id={}", userId, friendId);
+        }
     }
 
     public void removeFriend(Integer userId, Integer friendId) {
@@ -71,10 +76,7 @@ public class UserService {
     public List<User> getFriends(Integer userId) {
         getUserOrThrow(userId);
 
-        return userStorage.getFriendIds(userId).stream()
-                .sorted()
-                .map(this::getUserOrThrow)
-                .toList();
+        return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(Integer userId, Integer otherId) {
@@ -82,14 +84,7 @@ public class UserService {
         getUserOrThrow(userId);
         getUserOrThrow(otherId);
 
-        Set<Integer> a = userStorage.getFriendIds(userId);
-        Set<Integer> b = userStorage.getFriendIds(otherId);
-
-        return a.stream()
-                .filter(b::contains)
-                .sorted()
-                .map(this::getUserOrThrow)
-                .toList();
+        return userStorage.getCommonFriends(userId, otherId);
     }
 
     private void ensureDifferentUsers(Integer userId, Integer otherUserId) {
@@ -105,7 +100,6 @@ public class UserService {
     }
 
     private User getUserOrThrow(Integer userId) {
-        return userStorage.getById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+        return userStorage.getById(userId).orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 }
